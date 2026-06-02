@@ -1,5 +1,6 @@
 const  users = require('../model/userModel');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 exports.userLogin = async (req, res) => {
     try {
@@ -11,9 +12,14 @@ exports.userLogin = async (req, res) => {
             res.status(404).json({message: "Your are Not Registred User", success: false});
         }
 
+        const isPasswordMatch = await bcrypt.compare(password, findUser.password);
+        if(!isPasswordMatch){
+            res.status(404).json({message: "Invalid Password", success: false});
+        }
+
         const token = jwt.sign({id:findUser._id},process.env.JWT_SECRET, {expiresIn:'1d'});
         
-        res.status(201).json({message:"Login Successfully",success:true});
+        res.status(201).json({message:"Login Successfully", token, success:true});
 
     } catch(error) {
         res.status(404).json({message: "Error Login user", success: false});
@@ -21,8 +27,12 @@ exports.userLogin = async (req, res) => {
 }
 
 exports.getAllUsers = async (req, res) =>{
-    const usersList = await users.find();
-    res.json(usersList);
+    try {
+        const usersList = await users.find();
+        res.status(200).json({message: 'Users fetched successfully', users: usersList, success: true});
+    } catch (error) {
+        res.status(500).json({message: 'Error fetching users', success: false});
+    }
 };
 
 exports.createUser = async (req, res) => {
@@ -33,14 +43,22 @@ exports.createUser = async (req, res) => {
             return res.status(400).json({message: 'Please provide all required fields'});
         }
 
+        const existingUser = await users.findOne({email});
+        if(existingUser){
+            return res.status(400).json({message: 'Email already exists'});
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const user = new users({
             name,
             email,
-            password,
+            password: hashedPassword,
         });
 
         await user.save();
         res.status(201).json({message: 'User created successfully', success: true});
+        
     } catch (error) {
         res.status(500).json({message: 'Error creating user'});
     }
