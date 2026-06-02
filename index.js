@@ -1,4 +1,8 @@
+require('dotenv').config();
 const express = require('express');
+const mongoose = require('mongoose');
+const connectDB = require('./config/db');
+connectDB();
 
 const app = express();
 
@@ -8,25 +12,7 @@ const userRoutes = require('./routes/userRoutes');
 
 app.use('/api/users', userRoutes);
 
-app.get('/', (req, res) => {
-    res.send('Hello World! Home Page');
-})
-
-app.post('/login', (req, res) => {
-    res.send('Login Page');
-});
-
-app.put('/update/:id', (req, res) => {
-    const id = req.params.id;
-    res.send(`Update Page for ID: ${id}`);
-})
-
-app.delete('/delete/:id', (req, res) => {
-    const id = req.params.id;
-    res.send(`Delete Page for ID: ${id}`);
-})
-
-app.listen(3000, () => {
-    const Port = 3000;
+app.listen(process.env.PORT, () => {
+    const Port = process.env.PORT;
     console.log(`Server is running on Port ${Port}`);
 });
