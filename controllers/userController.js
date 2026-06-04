@@ -26,6 +26,17 @@ exports.userLogin = async (req, res) => {
     }
 }
 
+exports.profile = async(req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await users.findById(userId).select('-password');
+
+        
+
+
+    }
+}
+
 exports.getAllUsers = async (req, res) =>{
     try {
         const usersList = await users.find();
